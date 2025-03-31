@@ -1,4 +1,4 @@
-# portal-tranquillity - 小説家のためのウェブプラットフォーム
+# portal-tranquillity
 
 ## 技術スタック
 ### バックエンド
