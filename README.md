@@ -5,6 +5,7 @@
 - Go
 - Gin Webフレームワーク
 - MongoDB
+- Caddy（ウェブサーバー）
 - クリーンアーキテクチャ
 ### フロントエンド
 - Next.js
@@ -34,6 +35,10 @@ portal-tranquillity/
 │   ├── Dockerfile       # フロントエンド用Dockerfile
 │   └── package.json     # NPM依存関係
 │
+├── caddy/               # Caddyサーバー設定
+│   ├── Caddyfile        # Caddy設定ファイル
+│   └── Dockerfile       # Caddy用Dockerfile
+│
 ├── docker-compose.yml           # 開発用Docker Compose設定
 ├── docker-compose.prod.yml      # 本番用Docker Compose設定
 ├── Makefile                     # 開発用コマンドショートカット
@@ -54,7 +59,7 @@ portal-tranquillity/
    ```
    # バックエンド
    cp backend/.env.example backend/.env
-   
+
    # フロントエンド
    cp frontend/.env.example frontend/.env.local
    ```
@@ -79,6 +84,7 @@ portal-tranquillity/
   ```
   docker-compose logs -f frontend
   docker-compose logs -f backend
+  docker-compose logs -f caddy
   ```
 - コンテナの停止
   ```
@@ -94,6 +100,7 @@ portal-tranquillity/
 - Go 1.21以上
 - Node.js 18以上
 - MongoDB 6.0以上
+- Caddy 2.0以上
 ### バックエンドのセットアップ
 1. バックエンドディレクトリに移動
    ```
@@ -130,6 +137,18 @@ portal-tranquillity/
    ```
    npm run dev
    ```
+### Caddyのセットアップ
+1. Caddyのインストール（公式サイトの手順に従ってください）
+2. Caddyfileの設定
+   ```
+   cd ../caddy
+   cp Caddyfile.example Caddyfile
+   # Caddyfileを編集して必要な設定を行う
+   ```
+3. Caddyの起動
+   ```
+   caddy run
+   ```
 
 ## 本番環境へのデプロイ
 ### Dockerを使用したデプロイ
@@ -141,6 +160,10 @@ portal-tranquillity/
    
    # フロントエンド
    cp frontend/.env.example frontend/.env.prod
+   # 本番用の設定を編集
+   
+   # Caddy
+   cp caddy/Caddyfile.example caddy/Caddyfile.prod
    # 本番用の設定を編集
    ```
 2. 本番用のDockerイメージをビルド
@@ -173,6 +196,53 @@ portal-tranquillity/
    npm run start
    # または、Vercel、Netlifyなどのサービスを利用
    ```
+#### Caddy
+1. Caddyfileの本番設定を作成
+2. 本番サーバーにCaddyをインストール
+3. Caddyサービスを設定して起動
+   ```
+   caddy start
+   ```
+
+## Caddyの設定例
+以下は基本的なCaddyfileの例です：
+
+```
+# Caddyfile
+:80 {
+  # 本番環境では自動的にHTTPSにリダイレクト
+  redir https://{host}{uri} permanent
+}
+
+:443 {
+  # フロントエンドアプリケーションへのリバースプロキシ
+  handle /api/* {
+    reverse_proxy backend:8080
+  }
+
+  # バックエンドAPIへのリバースプロキシ
+  handle /* {
+    reverse_proxy frontend:3000
+  }
+
+  # 圧縮を有効化
+  encode gzip
+
+  # セキュリティヘッダー
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    X-Content-Type-Options nosniff
+    X-Frame-Options DENY
+    Referrer-Policy no-referrer-when-downgrade
+  }
+
+  # ログ設定
+  log {
+    output file /var/log/caddy/access.log
+    format json
+  }
+}
+```
 
 ## ライセンス
 MIT
@@ -216,6 +286,8 @@ make frontend-shell
 make backend-shell
 # MongoDBコンテナのシェルに接続
 make mongo-shell
+# Caddyコンテナのシェルに接続
+make caddy-shell
 # 使用可能なコマンド一覧を表示
 make help
 ```
