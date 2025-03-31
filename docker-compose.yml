@@ -28,11 +28,11 @@ services:
       - ENV=production
       - API_VERSION=v1
       - MONGO_URI=mongodb://mongo:27017
-      - MONGO_DATABASE=yuroku
+      - MONGO_DATABASE=portal
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRY=15m
       - REFRESH_TOKEN_EXPIRY=7d
-      - ALLOWED_ORIGINS=http://localhost:3000,https://yuroku.example.com
+      - ALLOWED_ORIGINS=http://localhost:3000,https://portal.example.com
       - STORAGE_TYPE=${STORAGE_TYPE:-local}
       - STORAGE_PATH=/app/storage
     volumes:
